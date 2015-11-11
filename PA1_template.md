@@ -1,29 +1,46 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 *Activity Monitoring data*  
 
 ***
 
 ##Loading and preprocessing the data
-```{r}
+
+```r
 if(!file.exists('activity.csv')){
     unzip('activity.zip')
 }
 activity <- read.csv("activity.csv",sep=",",header=TRUE,stringsAsFactors = FALSE)
 head(activity)
+```
+
+```
+##   steps       date interval
+## 1    NA 2012-10-01        0
+## 2    NA 2012-10-01        5
+## 3    NA 2012-10-01       10
+## 4    NA 2012-10-01       15
+## 5    NA 2012-10-01       20
+## 6    NA 2012-10-01       25
+```
+
+```r
 activity$date<-as.Date(activity$date)
 ```
 
 ##What is mean total number of steps taken per day?
 
 - Calculating Total number of steps per day
-```{r}
+
+```r
 stepsperday<-tapply(activity$steps,activity$date,sum,na.omit=TRUE)
 library(reshape2)
+```
+
+```
+## Warning: package 'reshape2' was built under R version 3.1.3
+```
+
+```r
 Sdays<-melt(stepsperday,id= "date")
 names(Sdays)[1]<- "date"
 names(Sdays)[2]<- "steps"
@@ -32,8 +49,16 @@ Sdays$date<-as.Date(Sdays$date)
 ```
 
 - Histogram of the total number of steps taken each day
-```{r}
+
+```r
 library(ggplot2)
+```
+
+```
+## Warning: package 'ggplot2' was built under R version 3.1.3
+```
+
+```r
 ggplot(Sdays, aes(date, steps)) + 
 geom_histogram(stat = "identity", colour = "steelblue", fill = "steelblue", width = 0.7) +
         labs(title = "Histogram of Total Number of Steps Taken Each Day", 
@@ -42,17 +67,25 @@ geom_histogram(stat = "identity", colour = "steelblue", fill = "steelblue", widt
         theme( axis.text.x  = element_text(angle=90))
 ```
 
+```
+## Warning: Removed 8 rows containing missing values (position_stack).
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png) 
+
 - Mean and median of the total number of steps taken per day
-```{r}
+
+```r
 mean1<-mean(Sdays$steps,na.rm = TRUE)      
 median1<-median(Sdays$steps,na.rm = TRUE)
 ```
 
-*Average steps taken per day is `r mean1` and the meadian is `r median1`.*
+*Average steps taken per day is 1.0767189\times 10^{4} and the meadian is 10766.*
 
 ##What is the average daily activity pattern?
 
-```{r}
+
+```r
 #Getting the average across all days for each 5 minute interval
 avgsteps <- tapply(activity$steps,list(activity$date,activity$interval),sum)
 interval_steps<-colSums(avgsteps,na.rm = TRUE)
@@ -65,7 +98,8 @@ for(i in 1:nrow(interval_activity)){
 #The column avgSteps has the average value for each 5 minute interval
 ```
 - Time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
-```{r}
+
+```r
 ggplot(interval_activity, aes(interval,avgSteps)) + geom_line() +
         xlab("Intervals of 5 mins") + ylab("Avg steps in a day")+
         scale_x_continuous(breaks=seq(0,2355,15))+
@@ -73,20 +107,34 @@ ggplot(interval_activity, aes(interval,avgSteps)) + geom_line() +
         annotate("text",label="179",vjust=0.2,x=835,y=179,size=3)
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png) 
+
 - Which 5-minute interval, on average across all the days in the dataset,contains the maximum number of steps?
-```{r}
+
+```r
 interval_activity[interval_activity$avgSteps== max(interval_activity$avgSteps),]
+```
+
+```
+##     interval steps avgSteps
+## 104      835 10927      179
 ```
 
 ##Imputing missing values
 - Total number of missing values in the dataset 
-```{r}
+
+```r
 sum(is.na(activity))
+```
+
+```
+## [1] 2304
 ```
 - Strategy for filling in all of the missing values in the dataset
 *The strategy used here is to fill in the NA's with the average of the 5 minute interval across all days*
 - New dataset that is equal to the original dataset but with the missing data filled in
-```{r}
+
+```r
 activity_new <- activity
 for (i in 1:nrow(activity_new)){
         
@@ -96,10 +144,28 @@ for (i in 1:nrow(activity_new)){
         }
 }
 sum(is.na(activity_new))
+```
+
+```
+## [1] 0
+```
+
+```r
 head(activity_new)
 ```
+
+```
+##   steps       date interval
+## 1     1 2012-10-01        0
+## 2     0 2012-10-01        5
+## 3     0 2012-10-01       10
+## 4     0 2012-10-01       15
+## 5     0 2012-10-01       20
+## 6     2 2012-10-01       25
+```
 - Histogram of the total number of steps taken each day(with new dataset)
-```{r}
+
+```r
 N_stepsperday<-tapply(activity_new$steps,activity_new$date,sum)
 library(reshape2)
 newSdays<-melt(N_stepsperday,id= "date")
@@ -114,25 +180,30 @@ ggplot(newSdays, aes(date, steps)) +
         scale_x_date(breaks = "days")+theme( axis.text.x  = element_text(angle=90))
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png) 
+
 - Mean and median total number of steps taken per day(with new dataset)
-```{r}
+
+```r
 mean2<-mean(newSdays$steps)      
 median2<-median(newSdays$steps)
 ```
 
-*The new mean and median are `r mean2` and `r median2`.*
+*The new mean and median are 1.0580721\times 10^{4} and 1.0395\times 10^{4}.*
 
 ##Do these values differ from the estimates from the first part of the assignment? 
-```{r}
+
+```r
 diff1<-mean(Sdays$steps,na.rm = TRUE)- mean(newSdays$steps)  
 diff2<-median(Sdays$steps,na.rm = TRUE)-median(newSdays$steps)
 ```
 
-* Impact of imputing missing data is that the new mean differ by `r diff1` and the new median differ by `r diff2` *
+* Impact of imputing missing data is that the new mean differ by 186.4673678 and the new median differ by 371 *
 
 ##Are there differences in activity patterns between weekdays and weekends?
 - Create a new factor variable in the dataset with two levels "weekday" and "weekend" indicating whether a given date is a weekday or weekend day
-```{r}
+
+```r
 #new day column
 activity_new$day <- weekdays(activity_new$date)
 
@@ -153,9 +224,12 @@ levels(avgweekday$day)<-list(weekday = c("Monday", "Tuesday",
 #introducing factor levels of weekday and weekend
 ```
 - Panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis)
-```{r}
+
+```r
 library(lattice)
 xyplot(value~interval|day,data = avgweekday,type="l",layout = c(1, 2),ylab="Average Steps")
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-14-1.png) 
 
 
